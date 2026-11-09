@@ -1,10 +1,23 @@
+import { createClient } from "@supabase/supabase-js";
 import type { Booking, Department, MeetingRoom } from "@/types/database";
 
-// Nạp client theo kiểu lazy: supabaseClient.ts ném lỗi ngay khi import nếu thiếu env,
-// nên không import tĩnh để `next build` không hỏng khi chưa có .env.local.
+// Tạo client đọc dữ liệu (dùng anon key, chỉ có quyền đọc) theo kiểu lazy để
+// `next build` không hỏng khi chưa có .env.local.
+// Mọi yêu cầu gửi đi đều kèm cache: "no-store" để Next.js không giữ lại dữ liệu cũ,
+// nhờ đó danh sách lịch họp luôn là dữ liệu mới nhất.
 async function getClient() {
-  const { supabase } = await import("@/lib/supabaseClient");
-  return supabase;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) {
+    throw new Error(
+      "Thiếu biến môi trường NEXT_PUBLIC_SUPABASE_URL hoặc NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    );
+  }
+  return createClient(url, anonKey, {
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }),
+    },
+  });
 }
 
 /** Lấy danh sách phòng ban, sắp xếp theo tên. */

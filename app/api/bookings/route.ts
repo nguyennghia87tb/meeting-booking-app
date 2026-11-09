@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { validateBookingInput, type BookingInput } from "@/lib/bookings/validate";
 import type { Booking } from "@/types/database";
@@ -80,6 +81,9 @@ export async function POST(request: Request) {
       await admin.from("bookings").delete().eq("id", booking.id);
       throw logError;
     }
+
+    // 5. Làm mới trang chủ để danh sách lịch họp hiện ngay đăng ký vừa tạo
+    revalidatePath("/");
 
     return NextResponse.json({ booking }, { status: 200 });
   } catch (err) {

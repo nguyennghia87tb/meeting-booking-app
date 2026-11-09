@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { cancelBooking } from "@/lib/bookings/cancel";
 
 function fail(message: string, status: number) {
@@ -24,6 +25,9 @@ export async function PATCH(
     if (result.kind === "already_cancelled") {
       return fail("Lịch họp này đã được hủy trước đó.", 409);
     }
+
+    // Làm mới trang chủ để danh sách hiện đúng trạng thái sau khi hủy/đôn
+    revalidatePath("/");
 
     return NextResponse.json(
       {
