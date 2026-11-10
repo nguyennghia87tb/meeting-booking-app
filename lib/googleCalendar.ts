@@ -8,18 +8,21 @@ const TIME_ZONE = "Asia/Ho_Chi_Minh";
 // Giới hạn thời gian chờ Google để API đăng ký không bị treo
 const TIMEOUT_MS = 8000;
 
+// Xác thực bằng OAuth 2.0 với một tài khoản Google trung tâm: máy chủ giữ refresh token
+// và thư viện tự đổi nó lấy access token mỗi khi cần.
 function getConfig() {
-  const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-  const calendarId = process.env.GOOGLE_CALENDAR_ID;
-  // Khi dán private key vào biến môi trường, dấu xuống dòng thường bị thành chuỗi "\n"
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  // Không khai báo GOOGLE_CALENDAR_ID thì dùng lịch chính của tài khoản trung tâm
+  const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
 
-  if (!clientEmail || !privateKey || !calendarId) {
+  if (!clientId || !clientSecret || !refreshToken) {
     throw new Error(
-      "Thiếu biến môi trường GOOGLE_CLIENT_EMAIL, GOOGLE_PRIVATE_KEY hoặc GOOGLE_CALENDAR_ID."
+      "Thiếu biến môi trường GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET hoặc GOOGLE_REFRESH_TOKEN."
     );
   }
-  return { clientEmail, privateKey, calendarId };
+  return { clientId, clientSecret, refreshToken, calendarId };
 }
 
 /**
@@ -38,17 +41,12 @@ export async function createGoogleMeetEvent(
   description?: string
 ): Promise<string> {
   try {
-    const { clientEmail, privateKey, calendarId } = getConfig();
+    const { clientId, clientSecret, refreshToken, calendarId } = getConfig();
 
-    const jwt = new auth.JWT({
-      email: clientEmail,
-      key: privateKey,
-      scopes: ["https://www.googleapis.com/auth/calendar.events"],
-      // Tùy chọn (chỉ với Google Workspace có ủy quyền toàn miền): tạo sự kiện thay mặt người dùng này
-      subject: process.env.GOOGLE_IMPERSONATE_EMAIL || undefined,
-    });
+    const oauth2Client = new auth.OAuth2(clientId, clientSecret);
+    oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-    const client = calendar({ version: "v3", auth: jwt });
+    const client = calendar({ version: "v3", auth: oauth2Client });
     const res = await client.events.insert(
       {
         calendarId,
@@ -81,7 +79,7 @@ export async function createGoogleMeetEvent(
     }
     return link;
   } catch (err) {
-    // Ghi log rõ nguyên nhân (KHÔNG in private key) rồi ném tiếp để nơi gọi quyết định cách xử lý
+    // Ghi log rõ nguyên nhân (KHÔNG in client secret hay refresh token) rồi ném tiếp để nơi gọi quyết định cách xử lý
     const e = err as { code?: number | string; message?: string; errors?: unknown };
     console.error("[GoogleCalendar] Tạo sự kiện Google Meet thất bại:", {
       title,
