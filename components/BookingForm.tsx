@@ -25,7 +25,7 @@ function toIso(value: string): string {
 }
 
 const inputClass =
-  "min-h-11 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30";
+  "min-h-11 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30 lg:min-h-9 lg:py-1.5 lg:text-sm";
 
 export default function BookingForm({ departments, rooms }: BookingFormProps) {
   const [fullName, setFullName] = useState("");
@@ -122,12 +122,12 @@ export default function BookingForm({ departments, rooms }: BookingFormProps) {
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="w-full space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+      className="w-full space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:h-full lg:space-y-2.5 lg:overflow-y-auto lg:p-4"
     >
-      <h2 className="text-xl font-semibold text-slate-900">Đăng ký họp</h2>
+      <h2 className="text-xl font-semibold text-slate-900 lg:text-lg">Đăng ký họp</h2>
 
       <div>
-        <label htmlFor="fullName" className="mb-1 block text-base font-medium text-slate-700">
+        <label htmlFor="fullName" className="mb-1 block text-base font-medium text-slate-700 lg:text-sm">
           Họ và tên <span className="text-red-600">*</span>
         </label>
         <input
@@ -137,11 +137,11 @@ export default function BookingForm({ departments, rooms }: BookingFormProps) {
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Nguyễn Văn A"
         />
-        {errors.fullName && <p className="mt-1 text-base text-red-600">{errors.fullName}</p>}
+        {errors.fullName && <p className="mt-1 text-base text-red-600 lg:text-sm">{errors.fullName}</p>}
       </div>
 
       <div>
-        <label htmlFor="department" className="mb-1 block text-base font-medium text-slate-700">
+        <label htmlFor="department" className="mb-1 block text-base font-medium text-slate-700 lg:text-sm">
           Phòng ban <span className="text-red-600">*</span>
         </label>
         <select
@@ -157,23 +157,23 @@ export default function BookingForm({ departments, rooms }: BookingFormProps) {
             </option>
           ))}
         </select>
-        {errors.department && <p className="mt-1 text-base text-red-600">{errors.department}</p>}
+        {errors.department && <p className="mt-1 text-base text-red-600 lg:text-sm">{errors.department}</p>}
       </div>
 
       <fieldset>
-        <legend className="mb-1 block text-base font-medium text-slate-700">Loại cuộc họp</legend>
+        <legend className="mb-1 block text-base font-medium text-slate-700 lg:text-sm">Loại cuộc họp</legend>
         <div className="flex flex-wrap gap-3">
           {(["OFFLINE", "ONLINE"] as const).map((type) => (
             <label
               key={type}
-              className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-base ${
+              className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-base lg:min-h-9 lg:py-1.5 lg:text-sm ${
                 meetingType === type
                   ? "border-brand bg-brand-light text-slate-900"
                   : "border-slate-300 text-slate-700"
               }`}
             >
               <input
-                type="radio" className="h-5 w-5 accent-brand-dark"
+                type="radio" className="h-5 w-5 accent-brand-dark lg:h-4 lg:w-4"
                 name="meetingType"
                 value={type}
                 checked={meetingType === type}
@@ -183,18 +183,18 @@ export default function BookingForm({ departments, rooms }: BookingFormProps) {
             </label>
           ))}
         </div>
-        <p className="mt-1 text-base text-slate-600">
+        <p className="mt-1 text-base text-slate-600 lg:text-xs">
           {meetingType === "OFFLINE"
             ? room
               ? `Phòng họp sẽ được gán tự động: ${room.name}`
               : "Chưa có phòng họp nào trong hệ thống."
             : "Link Google Meet sẽ được tạo sau khi đăng ký."}
         </p>
-        {errors.room && <p className="mt-1 text-base text-red-600">{errors.room}</p>}
+        {errors.room && <p className="mt-1 text-base text-red-600 lg:text-sm">{errors.room}</p>}
       </fieldset>
 
       <div>
-        <label htmlFor="title" className="mb-1 block text-base font-medium text-slate-700">
+        <label htmlFor="title" className="mb-1 block text-base font-medium text-slate-700 lg:text-sm">
           Tiêu đề cuộc họp <span className="text-red-600">*</span>
         </label>
         <input
@@ -204,12 +204,12 @@ export default function BookingForm({ departments, rooms }: BookingFormProps) {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Họp giao ban tuần"
         />
-        {errors.title && <p className="mt-1 text-base text-red-600">{errors.title}</p>}
+        {errors.title && <p className="mt-1 text-base text-red-600 lg:text-sm">{errors.title}</p>}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:gap-2.5">
         <div className="min-w-0">
-          <label htmlFor="start" className="mb-1 block text-base font-medium text-slate-700">
+          <label htmlFor="start" className="mb-1 block text-base font-medium text-slate-700 lg:text-sm">
             Bắt đầu <span className="text-red-600">*</span>
           </label>
           <input
@@ -219,10 +219,10 @@ export default function BookingForm({ departments, rooms }: BookingFormProps) {
             value={start}
             onChange={(e) => setStart(e.target.value)}
           />
-          {errors.start && <p className="mt-1 text-base text-red-600">{errors.start}</p>}
+          {errors.start && <p className="mt-1 text-base text-red-600 lg:text-sm">{errors.start}</p>}
         </div>
         <div className="min-w-0">
-          <label htmlFor="end" className="mb-1 block text-base font-medium text-slate-700">
+          <label htmlFor="end" className="mb-1 block text-base font-medium text-slate-700 lg:text-sm">
             Kết thúc <span className="text-red-600">*</span>
           </label>
           <input
@@ -232,42 +232,46 @@ export default function BookingForm({ departments, rooms }: BookingFormProps) {
             value={end}
             onChange={(e) => setEnd(e.target.value)}
           />
-          {errors.end && <p className="mt-1 text-base text-red-600">{errors.end}</p>}
+          {errors.end && <p className="mt-1 text-base text-red-600 lg:text-sm">{errors.end}</p>}
         </div>
       </div>
 
       {Object.keys(errors).length > 0 && (
-        <p className="text-base font-medium text-red-600">
+        <p className="text-base font-medium text-red-600 lg:text-sm">
           Vui lòng kiểm tra lại các trường được đánh dấu ở trên.
         </p>
       )}
-      {notice && (
-        <p
-          role="status"
-          className="rounded-lg bg-brand-light px-3 py-2 text-base font-medium text-slate-900"
-        >
-          {notice}
-        </p>
-      )}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-dark px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand focus:outline-none focus:ring-2 focus:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        {submitting && (
-          <span
-            aria-hidden="true"
-            className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
-          />
+      {/* lg+: khối này dính ở đáy khung form nên nút "Đăng ký họp" và thông báo luôn nhìn thấy,
+          kể cả khi form phải cuộn. Lề âm để nền trắng che kín tới mép khung. */}
+      <div className="space-y-2 bg-white lg:sticky lg:bottom-0 lg:-mx-4 lg:-mb-4 lg:border-t lg:border-slate-200 lg:px-4 lg:pb-4 lg:pt-3">
+        {notice && (
+          <p
+            role="status"
+            className="rounded-lg bg-brand-light px-3 py-2 text-base font-medium text-slate-900 lg:text-sm"
+          >
+            {notice}
+          </p>
         )}
-        {submitting ? "Đang gửi..." : "Đăng ký họp"}
-      </button>
-      {serverError && (
-        <p role="alert" className="text-base font-medium text-red-600">
-          {serverError}
-        </p>
-      )}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-dark px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand focus:outline-none focus:ring-2 focus:ring-brand/40 disabled:cursor-not-allowed disabled:opacity-70 lg:min-h-10 lg:py-2"
+        >
+          {submitting && (
+            <span
+              aria-hidden="true"
+              className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
+            />
+          )}
+          {submitting ? "Đang gửi..." : "Đăng ký họp"}
+        </button>
+        {serverError && (
+          <p role="alert" className="text-base font-medium text-red-600 lg:text-sm">
+            {serverError}
+          </p>
+        )}
+      </div>
     </form>
   );
 }

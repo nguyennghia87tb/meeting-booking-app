@@ -55,11 +55,13 @@ async function HomeContent() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-      <div className="min-w-0 lg:col-span-5">
+    // Màn hình rộng (lg+): hai cột cao bằng phần còn lại của màn hình, mỗi cột tự cuộn bên trong.
+    // Điện thoại: xếp dọc và cuộn cả trang như bình thường.
+    <div className="grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-12 lg:grid-rows-1 lg:gap-4">
+      <div className="min-w-0 lg:col-span-4 lg:h-full lg:min-h-0">
         <BookingForm departments={departments} rooms={rooms} />
       </div>
-      <div className="min-w-0 lg:col-span-7">
+      <div className="min-w-0 lg:col-span-8 lg:h-full lg:min-h-0">
         <BookingList bookings={bookings} departments={departments} />
       </div>
     </div>
@@ -68,14 +70,17 @@ async function HomeContent() {
 
 export default function Home() {
   return (
-    <main className="min-h-screen w-full bg-slate-50 text-slate-900">
-      <div className="mx-auto w-full max-w-7xl overflow-x-hidden px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
-        <header className="mb-6 flex items-center gap-3 border-b-4 border-brand pb-3 sm:gap-4">
+    // lg+: khóa chiều cao đúng bằng màn hình (h-screen) và chặn cuộn toàn trang
+    <main className="min-h-screen w-full bg-slate-50 text-slate-900 lg:h-screen lg:overflow-hidden">
+      <div className="mx-auto w-full max-w-7xl overflow-x-hidden px-4 py-4 sm:px-6 sm:py-8 lg:flex lg:h-full lg:flex-col lg:overflow-hidden lg:px-8 lg:py-3">
+        <header className="mb-6 flex shrink-0 items-center gap-3 border-b-4 border-brand pb-3 sm:gap-4 lg:mb-3 lg:pb-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/Logo.jpg" alt="VIET XO Steel" className="h-16 w-auto sm:h-20" />
+          <img src="/Logo.jpg" alt="VIET XO Steel" className="h-16 w-auto sm:h-20 lg:h-12" />
           <div>
-            <h1 className="text-2xl font-bold text-brand-dark sm:text-3xl">Đăng ký phòng họp</h1>
-            <p className="mt-1 text-base text-slate-600">VX Thanh Hóa</p>
+            <h1 className="text-2xl font-bold text-brand-dark sm:text-3xl lg:text-2xl">
+              Đăng ký phòng họp
+            </h1>
+            <p className="mt-1 text-base text-slate-600 lg:mt-0 lg:text-sm">VX Thanh Hóa</p>
           </div>
         </header>
         <Suspense fallback={<LoadingState />}>

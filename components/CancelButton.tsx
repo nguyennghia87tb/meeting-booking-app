@@ -48,12 +48,12 @@ export default function CancelButton({ bookingId }: CancelButtonProps) {
   }
 
   return (
-    <div className="mt-2">
+    <div className="mt-2 xl:mt-0">
       <button
         type="button"
         onClick={handleCancel}
         disabled={loading}
-        className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-red-300 px-4 py-2 text-base font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:opacity-70 xl:min-h-9 xl:text-sm"
+        className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-lg border border-red-300 px-4 py-2 text-base font-medium text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:opacity-70 xl:min-h-8 xl:px-3 xl:py-1 xl:text-sm"
       >
         {loading ? (
           <span
