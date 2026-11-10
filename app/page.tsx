@@ -76,11 +76,17 @@ export default function Home() {
         <header className="mb-6 flex shrink-0 items-center gap-3 border-b-4 border-brand pb-3 sm:gap-4 lg:mb-3 lg:pb-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/Logo.jpg" alt="VIET XO Steel" className="h-16 w-auto sm:h-20 lg:h-12" />
-          <div>
-            <h1 className="text-2xl font-bold text-brand-dark sm:text-3xl lg:text-2xl">
-              Đăng ký phòng họp
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold leading-tight text-brand-dark sm:text-3xl lg:text-xl">
+              ĐĂNG KÝ PHÒNG HỌP
             </h1>
-            <p className="mt-1 text-base text-slate-600 lg:mt-0 lg:text-sm">VX Thanh Hóa</p>
+            <p className="mt-0.5 text-lg font-semibold leading-snug text-brand lg:mt-0 lg:text-base">
+              Công ty Cổ phần Thép Việt Xô
+            </p>
+            {/* Giá trị cốt lõi: chữ nhỏ, màu nhẹ để không làm Header cao thêm nhiều */}
+            <p className="text-xs leading-snug text-brand-dark/80">
+              Chính trực - Cam kết - Tận tâm - Gắn kết - Tôn trọng - Tuân thủ - Đổi mới - Sáng tạo
+            </p>
           </div>
         </header>
         <Suspense fallback={<LoadingState />}>

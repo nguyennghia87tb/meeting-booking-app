@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Đăng ký phòng họp - VX Thanh Hóa",
-  description: "Hệ thống đăng ký phòng họp VX Thanh Hóa",
+  title: "ĐĂNG KÝ PHÒNG HỌP - Công ty Cổ phần Thép Việt Xô",
+  description: "Hệ thống đăng ký phòng họp - Công ty Cổ phần Thép Việt Xô",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

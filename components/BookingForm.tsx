@@ -122,7 +122,7 @@ export default function BookingForm({ departments, rooms }: BookingFormProps) {
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="w-full space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:h-full lg:space-y-2.5 lg:overflow-y-auto lg:p-4"
+      className="w-full space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:h-full lg:space-y-2.5 lg:overflow-y-auto lg:p-4 lg:pb-0"
     >
       <h2 className="text-xl font-semibold text-slate-900 lg:text-lg">Đăng ký họp</h2>
 
@@ -243,8 +243,9 @@ export default function BookingForm({ departments, rooms }: BookingFormProps) {
       )}
 
       {/* lg+: khối này dính ở đáy khung form nên nút "Đăng ký họp" và thông báo luôn nhìn thấy,
-          kể cả khi form phải cuộn. Lề âm để nền trắng che kín tới mép khung. */}
-      <div className="space-y-2 bg-white lg:sticky lg:bottom-0 lg:-mx-4 lg:-mb-4 lg:border-t lg:border-slate-200 lg:px-4 lg:pb-4 lg:pt-3">
+          kể cả khi form phải cuộn. Khung form bỏ lề đáy (lg:pb-0), lề đó chuyển vào khối này
+          để nền trắng che kín tới mép dưới và không lộ nội dung phía sau. */}
+      <div className="space-y-2 bg-white lg:sticky lg:bottom-0 lg:z-10 lg:-mx-4 lg:border-t lg:border-slate-200 lg:px-4 lg:pb-4 lg:pt-3">
         {notice && (
           <p
             role="status"
