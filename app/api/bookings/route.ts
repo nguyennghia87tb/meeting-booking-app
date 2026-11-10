@@ -100,10 +100,14 @@ export async function POST(request: Request) {
           .eq("id", booking.id)
           .select()
           .single();
-        if (updateError) throw updateError;
+        if (updateError) {
+          // Google đã tạo link nhưng không ghi được vào DB: log riêng để phân biệt với lỗi từ Google
+          console.error("[GoogleCalendar] Đã có link Meet nhưng lưu meet_url vào DB lỗi:", updateError);
+          throw updateError;
+        }
         booking = updated as Booking;
       } catch (meetErr) {
-        console.error("Không tạo được link Google Meet:", meetErr);
+        console.error("[GoogleCalendar] Không tạo/lưu được link Google Meet:", meetErr);
         warning =
           "Đăng ký đã được lưu nhưng chưa tạo được link Google Meet. Vui lòng liên hệ quản trị để được cấp link.";
       }

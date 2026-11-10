@@ -41,6 +41,17 @@ export async function createGoogleMeetEvent(
   description?: string
 ): Promise<string> {
   try {
+    // Chỉ in CÓ/KHÔNG, không in giá trị bí mật. Dòng này chứng tỏ hàm đã thực sự được gọi.
+    console.log("[GoogleCalendar] Bắt đầu tạo sự kiện:", {
+      title,
+      startTime,
+      endTime,
+      hasClientId: Boolean(process.env.GOOGLE_CLIENT_ID),
+      hasClientSecret: Boolean(process.env.GOOGLE_CLIENT_SECRET),
+      hasRefreshToken: Boolean(process.env.GOOGLE_REFRESH_TOKEN),
+      calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
+    });
+
     const { clientId, clientSecret, refreshToken, calendarId } = getConfig();
 
     const oauth2Client = new auth.OAuth2(clientId, clientSecret);
@@ -66,6 +77,9 @@ export async function createGoogleMeetEvent(
       },
       { timeout: TIMEOUT_MS }
     );
+
+    // In toàn bộ phản hồi của Google để kiểm tra (JSON.stringify để log không bị rút gọn)
+    console.log("[GoogleCalendar] Response:", JSON.stringify(res.data));
 
     const link =
       res.data.hangoutLink ??
