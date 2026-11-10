@@ -8,14 +8,19 @@ const TIME_ZONE = "Asia/Ho_Chi_Minh";
 // Giới hạn thời gian chờ Google để API đăng ký không bị treo
 const TIMEOUT_MS = 8000;
 
+// Mã lịch CHỈ lấy từ biến môi trường GOOGLE_CALENDAR_ID. Nếu trống hoặc không có thì dùng
+// "primary" = lịch chính của tài khoản Google trung tâm. Không gán cứng email nào trong code.
+function getCalendarId(): string {
+  return process.env.GOOGLE_CALENDAR_ID?.trim() || "primary";
+}
+
 // Xác thực bằng OAuth 2.0 với một tài khoản Google trung tâm: máy chủ giữ refresh token
 // và thư viện tự đổi nó lấy access token mỗi khi cần.
 function getConfig() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
-  // Không khai báo GOOGLE_CALENDAR_ID thì dùng lịch chính của tài khoản trung tâm
-  const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
+  const calendarId = getCalendarId();
 
   if (!clientId || !clientSecret || !refreshToken) {
     throw new Error(
@@ -49,7 +54,7 @@ export async function createGoogleMeetEvent(
       hasClientId: Boolean(process.env.GOOGLE_CLIENT_ID),
       hasClientSecret: Boolean(process.env.GOOGLE_CLIENT_SECRET),
       hasRefreshToken: Boolean(process.env.GOOGLE_REFRESH_TOKEN),
-      calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
+      calendarId: getCalendarId(),
     });
 
     const { clientId, clientSecret, refreshToken, calendarId } = getConfig();
