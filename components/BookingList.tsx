@@ -92,7 +92,7 @@ export default function BookingList({ bookings, departments }: BookingListProps)
       ) : (
         <>
           {/* Điện thoại: dạng thẻ */}
-          <ul className="mt-4 space-y-3 xl:hidden">
+          <ul className="mt-4 max-h-[600px] space-y-3 overflow-y-auto xl:hidden">
             {bookings.map((b) => (
               <li key={b.id} className="min-w-0 rounded-xl [overflow-wrap:anywhere] border border-slate-200 p-4">
                 <div className="flex items-start justify-between gap-2">
@@ -111,9 +111,10 @@ export default function BookingList({ bookings, departments }: BookingListProps)
           </ul>
 
           {/* Màn hình rộng: dạng bảng */}
-          <div className="mt-4 hidden w-full overflow-x-auto xl:block">
+          {/* Cuộn dọc và ngang trong cùng một khung thì tiêu đề bảng mới dính được khi cuộn */}
+          <div className="mt-4 hidden max-h-[600px] w-full overflow-x-auto overflow-y-auto xl:block">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
+              <thead className="sticky top-0 z-10 bg-white text-xs uppercase text-slate-500 shadow-[0_1px_0_0_#e2e8f0]">
                 <tr>
                   <th className="py-2 pr-3 font-medium">Thời gian</th>
                   <th className="py-2 pr-3 font-medium">Tiêu đề</th>

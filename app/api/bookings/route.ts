@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createGoogleMeetEvent } from "@/lib/googleCalendar";
 import { validateBookingInput, type BookingInput } from "@/lib/bookings/validate";
 import type { Booking } from "@/types/database";
 
@@ -82,10 +83,36 @@ export async function POST(request: Request) {
       throw logError;
     }
 
-    // 5. Làm mới trang chủ để danh sách lịch họp hiện ngay đăng ký vừa tạo
+    // 5. Họp ONLINE: tạo link Google Meet rồi lưu vào meet_url.
+    // Lỗi ở bước này KHÔNG làm hỏng đăng ký: booking vẫn giữ, meet_url để null, trả về cảnh báo.
+    let warning: string | null = null;
+    if (booking.meeting_type === "ONLINE") {
+      try {
+        const meetUrl = await createGoogleMeetEvent(
+          booking.meeting_title,
+          booking.start_time,
+          booking.end_time,
+          `Người đăng ký: ${booking.full_name}`
+        );
+        const { data: updated, error: updateError } = await admin
+          .from("bookings")
+          .update({ meet_url: meetUrl })
+          .eq("id", booking.id)
+          .select()
+          .single();
+        if (updateError) throw updateError;
+        booking = updated as Booking;
+      } catch (meetErr) {
+        console.error("Không tạo được link Google Meet:", meetErr);
+        warning =
+          "Đăng ký đã được lưu nhưng chưa tạo được link Google Meet. Vui lòng liên hệ quản trị để được cấp link.";
+      }
+    }
+
+    // 6. Làm mới trang chủ để danh sách lịch họp hiện ngay đăng ký vừa tạo
     revalidatePath("/");
 
-    return NextResponse.json({ booking }, { status: 200 });
+    return NextResponse.json({ booking, warning }, { status: 200 });
   } catch (err) {
     const e = err as { code?: string; message?: string };
     console.error("POST /api/bookings lỗi:", err);

@@ -85,7 +85,7 @@ export default function BookingForm({ departments, rooms }: BookingFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const result: { booking?: Booking; error?: string } = await res
+      const result: { booking?: Booking; error?: string; warning?: string | null } = await res
         .json()
         .catch(() => ({}));
 
@@ -101,6 +101,8 @@ export default function BookingForm({ departments, rooms }: BookingFormProps) {
           ? `Đăng ký thành công! Khung giờ này đã có người đặt, bạn đang ở vị trí chờ số ${b.queue_position}.`
           : "Đăng ký thành công!"
       );
+      // Ví dụ: đã lưu đăng ký nhưng chưa tạo được link Google Meet
+      if (result.warning) setServerError(result.warning);
       setFullName("");
       setDepartmentId("");
       setMeetingType("OFFLINE");
