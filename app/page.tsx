@@ -3,16 +3,10 @@ import { connection } from "next/server";
 import BookingForm from "@/components/BookingForm";
 import BookingList from "@/components/BookingList";
 import {
-  getBookingsByDate,
+  getAllBookings,
   getDepartments,
   getMeetingRooms,
 } from "@/lib/supabase/queries";
-
-// Ngày hôm nay theo giờ Việt Nam, dạng YYYY-MM-DD
-// (toISOString() trả về giờ UTC nên sẽ lệch ngày trong khoảng 00:00-07:00 sáng)
-function todayInVietnam(): string {
-  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
-}
 
 // Hiển thị trong lúc chờ tải dữ liệu từ Supabase
 function LoadingState() {
@@ -29,12 +23,12 @@ function LoadingState() {
 }
 
 // Lấy dữ liệu, trả về lỗi dạng chuỗi thay vì ném ra (để dựng JSX ngoài try/catch)
-async function loadData(today: string) {
+async function loadData() {
   try {
     const [departments, rooms, bookings] = await Promise.all([
       getDepartments(),
       getMeetingRooms(),
-      getBookingsByDate(today),
+      getAllBookings(),
     ]);
     return { departments, rooms, bookings, error: null };
   } catch (err) {
@@ -46,8 +40,7 @@ async function loadData(today: string) {
 async function HomeContent() {
   // Dữ liệu lấy lúc có request, không prerender lúc build
   await connection();
-  const today = todayInVietnam();
-  const { departments, rooms, bookings, error } = await loadData(today);
+  const { departments, rooms, bookings, error } = await loadData();
 
   if (error) {
     return (
@@ -61,14 +54,13 @@ async function HomeContent() {
     );
   }
 
-  const [y, m, d] = today.split("-");
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
       <div className="min-w-0 lg:col-span-5">
         <BookingForm departments={departments} rooms={rooms} />
       </div>
       <div className="min-w-0 lg:col-span-7">
-        <BookingList bookings={bookings} departments={departments} dateLabel={`${d}/${m}/${y}`} />
+        <BookingList bookings={bookings} departments={departments} />
       </div>
     </div>
   );

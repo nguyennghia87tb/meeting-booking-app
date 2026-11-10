@@ -48,28 +48,17 @@ export async function getMeetingRooms(): Promise<MeetingRoom[]> {
   return (data ?? []) as MeetingRoom[];
 }
 
-/**
- * Lấy các booking bắt đầu trong ngày `date` (định dạng YYYY-MM-DD,
- * tính theo giờ Việt Nam UTC+7, từ 00:00 đến 23:59:59), sắp xếp theo start_time.
- */
-export async function getBookingsByDate(date: string): Promise<Booking[]> {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) {
-    throw new Error(`Ngày không hợp lệ: "${date}". Định dạng đúng là YYYY-MM-DD.`);
-  }
-
-  const dayStart = `${date}T00:00:00+07:00`;
-  const dayEnd = `${date}T23:59:59.999+07:00`;
-
+/** Lấy TẤT CẢ booking (kể cả đã hủy), sắp xếp theo start_time tăng dần (cũ nhất lên đầu). */
+export async function getAllBookings(): Promise<Booking[]> {
   const supabase = await getClient();
   const { data, error } = await supabase
     .from("bookings")
     .select("*")
-    .gte("start_time", dayStart)
-    .lte("start_time", dayEnd)
-    .order("start_time", { ascending: true });
+    .order("start_time", { ascending: true })
+    .order("created_at", { ascending: true });
 
   if (error) {
-    throw new Error(`Không thể lấy danh sách đăng ký ngày ${date}: ${error.message}`);
+    throw new Error(`Không thể lấy danh sách lịch họp: ${error.message}`);
   }
   return (data ?? []) as Booking[];
 }

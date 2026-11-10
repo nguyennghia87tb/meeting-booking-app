@@ -7,7 +7,7 @@ interface CancelButtonProps {
   bookingId: number;
 }
 
-/** Nút "Hủy" lịch họp: hỏi xác nhận, gọi API, rồi tải lại danh sách. */
+/** Nút "Hủy" lịch họp: hỏi mật khẩu quản trị, gọi API, rồi tải lại danh sách. */
 export default function CancelButton({ bookingId }: CancelButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -15,12 +15,19 @@ export default function CancelButton({ bookingId }: CancelButtonProps) {
 
   async function handleCancel() {
     if (loading) return;
-    if (!confirm("Bạn có chắc muốn hủy lịch họp này?")) return;
+    // Bấm Cancel -> prompt trả về null -> không làm gì cả
+    const password = prompt("Vui lòng nhập mật khẩu quản trị để hủy lịch:");
+    if (password === null) return;
 
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/bookings/${bookingId}`, { method: "PATCH" });
+      // Mật khẩu gửi trong body (không đưa lên URL) và được kiểm tra ở máy chủ
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
       const result: { message?: string; error?: string; promoted?: unknown; warnings?: string[] } =
         await res.json().catch(() => ({}));
 

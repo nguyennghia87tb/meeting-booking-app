@@ -4,8 +4,18 @@ import type { Booking, BookingStatus, Department, MeetingType } from "@/types/da
 interface BookingListProps {
   bookings: Booking[];
   departments: Department[];
-  /** Nhãn ngày hiển thị trên tiêu đề, ví dụ "09/11/2026" */
-  dateLabel: string;
+}
+
+// Ngày theo giờ Việt Nam, dạng dd/mm/yyyy
+const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "Asia/Ho_Chi_Minh",
+});
+
+function dateOf(iso: string): string {
+  return dateFormatter.format(new Date(iso));
 }
 
 const timeFormatter = new Intl.DateTimeFormat("vi-VN", {
@@ -15,8 +25,16 @@ const timeFormatter = new Intl.DateTimeFormat("vi-VN", {
   timeZone: "Asia/Ho_Chi_Minh",
 });
 
+// Ví dụ: "10/11/2026 | 08:00 - 09:00".
+// Cuộc họp kéo sang ngày khác thì ghi thêm ngày kết thúc để không gây hiểu nhầm.
 function timeRange(b: Booking): string {
-  return `${timeFormatter.format(new Date(b.start_time))} - ${timeFormatter.format(new Date(b.end_time))}`;
+  const startDate = dateOf(b.start_time);
+  const endDate = dateOf(b.end_time);
+  const start = timeFormatter.format(new Date(b.start_time));
+  const end = timeFormatter.format(new Date(b.end_time));
+  return startDate === endDate
+    ? `${startDate} | ${start} - ${end}`
+    : `${startDate} | ${start} - ${end} (${endDate})`;
 }
 
 const STATUS_STYLE: Record<BookingStatus, { label: string; className: string }> = {
@@ -59,19 +77,17 @@ function MeetLink({ url }: { url: string | null }) {
   );
 }
 
-export default function BookingList({ bookings, departments, dateLabel }: BookingListProps) {
+export default function BookingList({ bookings, departments }: BookingListProps) {
   const deptName = new Map(departments.map((d) => [d.id, d.name]));
   const nameOf = (b: Booking) => deptName.get(b.department_id) ?? "—";
 
   return (
     <section className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <h2 className="text-xl font-semibold text-slate-900">
-        Lịch họp hôm nay <span className="font-normal text-slate-500">({dateLabel})</span>
-      </h2>
+      <h2 className="text-xl font-semibold text-slate-900">Danh sách lịch họp</h2>
 
       {bookings.length === 0 ? (
         <p className="mt-4 rounded-lg bg-slate-50 px-4 py-6 text-center text-base text-slate-600">
-          Hôm nay chưa có cuộc họp nào được đăng ký.
+          Chưa có cuộc họp nào được đăng ký.
         </p>
       ) : (
         <>

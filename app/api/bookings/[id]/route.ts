@@ -1,16 +1,40 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { cancelBooking } from "@/lib/bookings/cancel";
 
 function fail(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
-/** PATCH /api/bookings/:id — hủy booking và đôn người từ hàng chờ (nếu có). */
+// So sánh mật khẩu theo cách không để lộ thông tin qua thời gian phản hồi
+function samePassword(given: string, expected: string): boolean {
+  const a = createHash("sha256").update(given).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
+/**
+ * PATCH /api/bookings/:id — hủy booking và đôn người từ hàng chờ (nếu có).
+ * Body: { "password": "<mật khẩu quản trị>" }, so với biến môi trường ADMIN_DELETE_PASSWORD.
+ */
 export async function PATCH(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Kiểm tra mật khẩu quản trị TRƯỚC mọi thao tác với dữ liệu
+  const adminPassword = process.env.ADMIN_DELETE_PASSWORD;
+  if (!adminPassword) {
+    console.error("Thiếu biến môi trường ADMIN_DELETE_PASSWORD.");
+    return fail("Máy chủ chưa cấu hình mật khẩu quản trị (ADMIN_DELETE_PASSWORD).", 500);
+  }
+  const body: unknown = await request.json().catch(() => null);
+  const password =
+    body && typeof body === "object" ? (body as { password?: unknown }).password : undefined;
+  if (typeof password !== "string" || !samePassword(password, adminPassword)) {
+    return fail("Mật khẩu quản trị không đúng!", 403);
+  }
+
   try {
     const { id: rawId } = await params;
     if (!/^\d+$/.test(rawId) || !Number.isSafeInteger(Number(rawId)) || Number(rawId) <= 0) {
