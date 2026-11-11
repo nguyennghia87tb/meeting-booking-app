@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { cancelBooking } from "@/lib/bookings/cancel";
+import { deleteGoogleCalendarEvent } from "@/lib/googleCalendar";
 
 function fail(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -50,6 +51,24 @@ export async function PATCH(
       return fail("Lịch họp này đã được hủy trước đó.", 409);
     }
 
+    // Đồng bộ với Google Calendar: lịch có google_event_id (họp ONLINE) thì xóa sự kiện tương ứng.
+    // Lịch trong DB đã hủy xong ở trên; Google lỗi thì chỉ ghi log và cảnh báo, không làm kẹt App.
+    const warnings = [...result.warnings];
+    const eventId = result.cancelled.google_event_id;
+    if (eventId) {
+      try {
+        await deleteGoogleCalendarEvent(eventId);
+      } catch (googleErr) {
+        console.error(
+          `[GoogleCalendar] Lỗi xóa sự kiện ${eventId} khi hủy lịch #${result.cancelled.id}:`,
+          googleErr instanceof Error ? googleErr.message : googleErr
+        );
+        warnings.push(
+          "Đã hủy lịch trên hệ thống nhưng chưa xóa được sự kiện trên Google Calendar. Vui lòng xóa thủ công."
+        );
+      }
+    }
+
     // Làm mới trang chủ để danh sách hiện đúng trạng thái sau khi hủy/đôn
     revalidatePath("/");
 
@@ -60,7 +79,7 @@ export async function PATCH(
           : "Đã hủy lịch họp.",
         cancelled: result.cancelled,
         promoted: result.promoted,
-        warnings: result.warnings,
+        warnings,
       },
       { status: 200 }
     );

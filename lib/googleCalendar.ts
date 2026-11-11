@@ -30,8 +30,23 @@ function getConfig() {
   return { clientId, clientSecret, refreshToken, calendarId };
 }
 
+// Tạo client Calendar đã xác thực, dùng chung cho việc tạo và xóa sự kiện
+function getCalendarClient() {
+  const { clientId, clientSecret, refreshToken, calendarId } = getConfig();
+  const oauth2Client = new auth.OAuth2(clientId, clientSecret);
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+  return { client: calendar({ version: "v3", auth: oauth2Client }), calendarId };
+}
+
+export interface GoogleMeetEvent {
+  /** Link Google Meet */
+  meetUrl: string;
+  /** Mã sự kiện trên Google Calendar, dùng để xóa sự kiện khi hủy lịch */
+  eventId: string;
+}
+
 /**
- * Tạo một sự kiện trên Google Calendar kèm phòng Google Meet và trả về link Meet.
+ * Tạo một sự kiện trên Google Calendar kèm phòng Google Meet, trả về link Meet và mã sự kiện.
  * Ném lỗi nếu thiếu cấu hình, Google từ chối, hoặc sự kiện tạo xong nhưng không có link Meet.
  *
  * @param title       Tiêu đề cuộc họp
@@ -44,14 +59,9 @@ export async function createGoogleMeetEvent(
   startTime: string,
   endTime: string,
   description?: string
-): Promise<string> {
+): Promise<GoogleMeetEvent> {
   try {
-    const { clientId, clientSecret, refreshToken, calendarId } = getConfig();
-
-    const oauth2Client = new auth.OAuth2(clientId, clientSecret);
-    oauth2Client.setCredentials({ refresh_token: refreshToken });
-
-    const client = calendar({ version: "v3", auth: oauth2Client });
+    const { client, calendarId } = getCalendarClient();
     const res = await client.events.insert(
       {
         calendarId,
@@ -77,12 +87,14 @@ export async function createGoogleMeetEvent(
       res.data.conferenceData?.entryPoints?.find((p) => p.entryPointType === "video")?.uri ??
       null;
 
-    if (!link) {
+    const eventId = res.data.id ?? null;
+
+    if (!link || !eventId) {
       throw new Error(
-        `Google Calendar đã tạo sự kiện (id: ${res.data.id ?? "?"}) nhưng không trả về link Google Meet.`
+        `Google Calendar đã tạo sự kiện (id: ${eventId ?? "?"}) nhưng không trả về ${link ? "mã sự kiện" : "link Google Meet"}.`
       );
     }
-    return link;
+    return { meetUrl: link, eventId };
   } catch (err) {
     // Ghi log rõ nguyên nhân (KHÔNG in client secret hay refresh token) rồi ném tiếp để nơi gọi quyết định cách xử lý
     const e = err as { code?: number | string; message?: string; errors?: unknown };
@@ -90,6 +102,34 @@ export async function createGoogleMeetEvent(
       title,
       startTime,
       endTime,
+      code: e.code ?? null,
+      message: e.message ?? String(err),
+      details: e.errors ?? null,
+    });
+    throw err;
+  }
+}
+
+/**
+ * Xóa một sự kiện trên Google Calendar (dùng khi hủy lịch họp ONLINE).
+ * `sendUpdates: "all"` để Google gửi email báo hủy cho những người được mời (nếu có).
+ * Sự kiện đã bị xóa từ trước (Google trả 404/410) được coi là thành công.
+ * Ném lỗi trong các trường hợp khác để nơi gọi quyết định cách xử lý.
+ */
+export async function deleteGoogleCalendarEvent(eventId: string): Promise<void> {
+  try {
+    const { client, calendarId } = getCalendarClient();
+    await client.events.delete(
+      { calendarId, eventId, sendUpdates: "all" },
+      { timeout: TIMEOUT_MS }
+    );
+  } catch (err) {
+    const e = err as { code?: number | string; message?: string; errors?: unknown };
+    const code = Number(e.code);
+    if (code === 404 || code === 410) return; // sự kiện không còn trên lịch: coi như đã xóa
+
+    console.error("[GoogleCalendar] Lỗi xóa sự kiện:", {
+      eventId,
       code: e.code ?? null,
       message: e.message ?? String(err),
       details: e.errors ?? null,

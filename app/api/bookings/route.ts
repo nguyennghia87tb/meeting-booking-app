@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { createGoogleMeetEvent } from "@/lib/googleCalendar";
+import { createGoogleMeetEvent, deleteGoogleCalendarEvent } from "@/lib/googleCalendar";
 import { validateBookingInput, type BookingInput } from "@/lib/bookings/validate";
 import type { Booking } from "@/types/database";
 
@@ -88,21 +88,24 @@ export async function POST(request: Request) {
     let warning: string | null = null;
     if (booking.meeting_type === "ONLINE") {
       try {
-        const meetUrl = await createGoogleMeetEvent(
+        const { meetUrl, eventId } = await createGoogleMeetEvent(
           booking.meeting_title,
           booking.start_time,
           booking.end_time,
           `Người đăng ký: ${booking.full_name}`
         );
+        // Lưu cả mã sự kiện Google để sau này hủy lịch thì xóa được sự kiện trên Google Calendar
         const { data: updated, error: updateError } = await admin
           .from("bookings")
-          .update({ meet_url: meetUrl })
+          .update({ meet_url: meetUrl, google_event_id: eventId })
           .eq("id", booking.id)
           .select()
           .single();
         if (updateError) {
           // Google đã tạo link nhưng không ghi được vào DB: log riêng để phân biệt với lỗi từ Google
           console.error("[GoogleCalendar] Đã có link Meet nhưng lưu meet_url vào DB lỗi:", updateError);
+          // Không lưu được mã sự kiện thì về sau không xóa được, nên dọn sự kiện vừa tạo ngay bây giờ
+          await deleteGoogleCalendarEvent(eventId).catch(() => {});
           throw updateError;
         }
         booking = updated as Booking;

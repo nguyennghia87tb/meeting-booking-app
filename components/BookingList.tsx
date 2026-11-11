@@ -112,7 +112,8 @@ export default function BookingList({ bookings, departments }: BookingListProps)
                   {b.full_name} · {nameOf(b)}
                 </p>
                 <p className="text-base text-slate-600">{TYPE_LABEL[b.meeting_type]}</p>
-                <MeetLink url={b.meet_url} />
+                {/* Lịch đã hủy thì sự kiện Google cũng bị xóa, nên không hiện nút tham gia nữa */}
+                {canCancel(b) && <MeetLink url={b.meet_url} />}
                 {canCancel(b) && <CancelButton bookingId={b.id} />}
               </li>
             ))}
@@ -143,7 +144,7 @@ export default function BookingList({ bookings, departments }: BookingListProps)
                     {/* Tiêu đề: không hẹp hơn 11rem để chữ không rớt dòng lắt nhắt */}
                     <td className="min-w-[11rem] px-3 py-3 [overflow-wrap:anywhere]">
                       <div className="font-medium text-slate-900">{b.meeting_title}</div>
-                      <MeetLink url={b.meet_url} />
+                      {canCancel(b) && <MeetLink url={b.meet_url} />}
                     </td>
                     {/* Người đăng ký: dòng 1 tên, dòng 2 phòng ban (nhỏ, xám) */}
                     <td className="min-w-[9rem] px-3 py-3">
