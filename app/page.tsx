@@ -30,17 +30,18 @@ async function loadData() {
       getMeetingRooms(),
       getAllBookings(),
     ]);
-    return { departments, rooms, bookings, error: null };
+    // now: mốc thời gian lúc tải dữ liệu, để danh sách biết cuộc họp nào đã kết thúc
+    return { departments, rooms, bookings, now: Date.now(), error: null };
   } catch (err) {
     const error = err instanceof Error ? err.message : "Lỗi không xác định";
-    return { departments: [], rooms: [], bookings: [], error };
+    return { departments: [], rooms: [], bookings: [], now: 0, error };
   }
 }
 
 async function HomeContent() {
   // Dữ liệu lấy lúc có request, không prerender lúc build
   await connection();
-  const { departments, rooms, bookings, error } = await loadData();
+  const { departments, rooms, bookings, now, error } = await loadData();
 
   if (error) {
     return (
@@ -62,7 +63,7 @@ async function HomeContent() {
         <BookingForm departments={departments} rooms={rooms} />
       </div>
       <div className="min-w-0 lg:col-span-8 lg:h-full lg:min-h-0">
-        <BookingList bookings={bookings} departments={departments} />
+        <BookingList bookings={bookings} departments={departments} now={now} />
       </div>
     </div>
   );

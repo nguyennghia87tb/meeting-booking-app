@@ -4,6 +4,8 @@ import type { Booking, BookingStatus, Department, MeetingType } from "@/types/da
 interface BookingListProps {
   bookings: Booking[];
   departments: Department[];
+  /** Thời điểm hiện tại (mili giây), dùng để nhận biết cuộc họp đã kết thúc */
+  now: number;
 }
 
 // Ngày theo giờ Việt Nam, dạng dd/mm/yyyy
@@ -53,8 +55,11 @@ function canCancel(b: Booking): boolean {
   return b.status === "CONFIRMED" || b.status === "WAITING";
 }
 
-function StatusBadge({ status }: { status: BookingStatus }) {
-  const s = STATUS_STYLE[status];
+// Nhãn cho cuộc họp đã qua giờ kết thúc (chỉ là cách hiển thị, trạng thái trong DB không đổi)
+const ENDED_STYLE = { label: "Đã kết thúc", className: "bg-slate-200 text-slate-600" };
+
+function StatusBadge({ status, ended }: { status: BookingStatus; ended: boolean }) {
+  const s = ended ? ENDED_STYLE : STATUS_STYLE[status];
   return (
     <span
       className={`inline-block whitespace-nowrap rounded-full px-3 py-1 text-sm font-medium xl:px-2.5 xl:text-xs ${s.className}`}
@@ -79,9 +84,18 @@ function MeetLink({ url }: { url: string | null }) {
   );
 }
 
-export default function BookingList({ bookings, departments }: BookingListProps) {
+export default function BookingList({ bookings, departments, now }: BookingListProps) {
   const deptName = new Map(departments.map((d) => [d.id, d.name]));
   const nameOf = (b: Booking) => deptName.get(b.department_id) ?? "—";
+
+  // "Đã kết thúc" = đã qua giờ kết thúc và chưa bị hủy. Cuộc họp đang diễn ra hoặc sắp tới
+  // không bị ảnh hưởng. Mốc "bây giờ" (now) do trang truyền vào, lấy lúc máy chủ tải dữ liệu.
+  const isEnded = (b: Booking) =>
+    b.status !== "CANCELLED" && new Date(b.end_time).getTime() < now;
+  // Còn hiệu lực: chưa hủy và chưa kết thúc. Chỉ khi đó mới hiện nút "Hủy" và nút tham gia Meet.
+  const isActive = (b: Booking) => canCancel(b) && !isEnded(b);
+  // Làm mờ cả dòng của cuộc họp đã kết thúc
+  const dim = (b: Booking) => (isEnded(b) ? "opacity-50" : "");
 
   return (
     // lg+: khung cao bằng cột (h-full), tiêu đề đứng yên, chỉ phần danh sách bên dưới cuộn
@@ -97,7 +111,10 @@ export default function BookingList({ bookings, departments }: BookingListProps)
           {/* Điện thoại: dạng thẻ */}
           <ul className="mt-4 max-h-[600px] space-y-3 overflow-y-auto lg:mt-3 lg:max-h-none lg:min-h-0 lg:flex-1 xl:hidden">
             {bookings.map((b) => (
-              <li key={b.id} className="min-w-0 rounded-xl [overflow-wrap:anywhere] border border-slate-200 p-4">
+              <li
+                key={b.id}
+                className={`min-w-0 rounded-xl [overflow-wrap:anywhere] border border-slate-200 p-4 ${dim(b)}`}
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="whitespace-nowrap text-base font-semibold text-slate-900">
@@ -105,16 +122,16 @@ export default function BookingList({ bookings, departments }: BookingListProps)
                     </div>
                     <div className="text-sm text-slate-500">{dayOf(b)}</div>
                   </div>
-                  <StatusBadge status={b.status} />
+                  <StatusBadge status={b.status} ended={isEnded(b)} />
                 </div>
                 <p className="mt-1 text-base font-medium text-slate-900">{b.meeting_title}</p>
                 <p className="text-base text-slate-600">
                   {b.full_name} · {nameOf(b)}
                 </p>
                 <p className="text-base text-slate-600">{TYPE_LABEL[b.meeting_type]}</p>
-                {/* Lịch đã hủy thì sự kiện Google cũng bị xóa, nên không hiện nút tham gia nữa */}
-                {canCancel(b) && <MeetLink url={b.meet_url} />}
-                {canCancel(b) && <CancelButton bookingId={b.id} />}
+                {/* Lịch đã hủy hoặc đã kết thúc thì không hiện nút tham gia Meet và nút Hủy nữa */}
+                {isActive(b) && <MeetLink url={b.meet_url} />}
+                {isActive(b) && <CancelButton bookingId={b.id} />}
               </li>
             ))}
           </ul>
@@ -135,7 +152,10 @@ export default function BookingList({ bookings, departments }: BookingListProps)
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800">
                 {bookings.map((b) => (
-                  <tr key={b.id} className="align-middle odd:bg-white even:bg-slate-50/60 hover:bg-brand-light/50">
+                  <tr
+                    key={b.id}
+                    className={`align-middle odd:bg-white even:bg-slate-50/60 hover:bg-brand-light/50 ${dim(b)}`}
+                  >
                     {/* Thời gian: dòng 1 giờ (đậm), dòng 2 ngày (nhỏ, xám) */}
                     <td className="whitespace-nowrap px-3 py-3">
                       <div className="font-semibold text-slate-900">{hoursOf(b)}</div>
@@ -144,7 +164,7 @@ export default function BookingList({ bookings, departments }: BookingListProps)
                     {/* Tiêu đề: không hẹp hơn 11rem để chữ không rớt dòng lắt nhắt */}
                     <td className="min-w-[11rem] px-3 py-3 [overflow-wrap:anywhere]">
                       <div className="font-medium text-slate-900">{b.meeting_title}</div>
-                      {canCancel(b) && <MeetLink url={b.meet_url} />}
+                      {isActive(b) && <MeetLink url={b.meet_url} />}
                     </td>
                     {/* Người đăng ký: dòng 1 tên, dòng 2 phòng ban (nhỏ, xám) */}
                     <td className="min-w-[9rem] px-3 py-3">
@@ -155,10 +175,10 @@ export default function BookingList({ bookings, departments }: BookingListProps)
                       {TYPE_LABEL[b.meeting_type]}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-center">
-                      <StatusBadge status={b.status} />
+                      <StatusBadge status={b.status} ended={isEnded(b)} />
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-center">
-                      {canCancel(b) ? <CancelButton bookingId={b.id} /> : null}
+                      {isActive(b) ? <CancelButton bookingId={b.id} /> : null}
                     </td>
                   </tr>
                 ))}
