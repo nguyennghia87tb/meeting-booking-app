@@ -90,12 +90,14 @@ export default function BookingList({ bookings, departments, now }: BookingListP
 
   // "Đã kết thúc" = đã qua giờ kết thúc và chưa bị hủy. Cuộc họp đang diễn ra hoặc sắp tới
   // không bị ảnh hưởng. Mốc "bây giờ" (now) do trang truyền vào, lấy lúc máy chủ tải dữ liệu.
-  const isEnded = (b: Booking) =>
-    b.status !== "CANCELLED" && new Date(b.end_time).getTime() < now;
+  // Đã qua giờ kết thúc, bất kể trạng thái
+  const isPast = (b: Booking) => new Date(b.end_time).getTime() < now;
+  // Nhãn "Đã kết thúc" chỉ dùng cho lịch chưa bị hủy; lịch đã hủy vẫn giữ nhãn "Đã hủy" màu đỏ
+  const isEnded = (b: Booking) => b.status !== "CANCELLED" && isPast(b);
   // Còn hiệu lực: chưa hủy và chưa kết thúc. Chỉ khi đó mới hiện nút "Hủy" và nút tham gia Meet.
   const isActive = (b: Booking) => canCancel(b) && !isEnded(b);
-  // Làm mờ cả dòng của cuộc họp đã kết thúc
-  const dim = (b: Booking) => (isEnded(b) ? "opacity-50" : "");
+  // Làm mờ cả dòng của mọi lịch đã qua giờ kết thúc, kể cả lịch đã hủy
+  const dim = (b: Booking) => (isPast(b) ? "opacity-50" : "");
 
   return (
     // lg+: khung cao bằng cột (h-full), tiêu đề đứng yên, chỉ phần danh sách bên dưới cuộn
