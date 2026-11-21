@@ -12,6 +12,14 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  experimental: {
+    serverActions: {
+      allowedOrigins: [
+        "vxth-meeting.vercel.app",
+        "localhost:3000",
+      ],
+    },
+  },
 };
 
 export default nextConfig;
